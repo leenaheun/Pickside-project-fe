@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickside - 상세</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="common.css">
+    <style>
+        /* 헤더 인터랙션 영역 */
+        header .icon { color: var(--text-main); }
+        .stat-item { display: flex; align-items: center; gap: 16px; color: var(--text-main); }
+        .stat-item 
+        .heart-icon svg path { stroke: currentColor; }
+        .heart-icon.active svg path { fill: #ff4d6d; stroke: #ff4d6d; }
+        .heart-pop svg { animation: heartPop 0.3s ease-in-out; }
+        @keyframes heartPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* 메타 정보 */
+        .participation-badge {
+            display: inline-flex; align-items: center; gap: 2px; background-color: (--white); color: var(--primary);
+            font-weight: 500; font-size: 0.7rem; padding: 0 10px; border-radius: 3px; margin-bottom: 12px; border: 1px solid var(--primary);
+        }
+        .top-totalVotes { padding: 4px 0;}
+        .author-info { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color); }
+        .author-meta { display: flex; flex-direction: column; gap: 4px; }
+        .author-name { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+        .time-ago { font-size: 0.75rem; color: var(--text-tertiary); }
+        .detail-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 8px 0; line-height: 1.4; color: var(--text-main); }
+        .detail-body { font-size: 1rem; line-height: 1.6; color: var(--text-main); margin-bottom: 24px; white-space: pre-wrap; }
+
+        /* Pick 섹션 (index.html 참여수 스타일 이식) */
+        .pick-section { 
+            padding: 12px 20px 24px 20px; border: 1px solid var(--border); border-radius: 5px; margin-bottom: 32px; 
+            background: var(--white);
+        }
+        .pick-title { 
+            display: flex; align-items: center; gap: 6px; 
+            font-size: 1rem; font-weight: 700; color: var(--primary);
+            margin-bottom: 12px; width: fit-content; padding: 4px; border-radius: 20px;
+        }
+
+        .choice-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .choice-box {
+            position: relative; padding: 16px 16px; border-radius: 5px; border: 1.5px solid var(--border);
+            background: var(--bg); cursor: pointer; transition: 0.2s; overflow: hidden;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .choice-box.selected { border-color: var(--primary);  box-shadow: 0 0 0 0.5px var(--primary);}
+        .choice-box .gauge { 
+            position: absolute; left: 0; top: 0; bottom: 0; background: var(--primary-soft); 
+            width: 0%; transition: width 0.8s cubic-bezier(0.1, 0.5, 0.1, 1); z-index: 1;
+        }
+        .choice-text { position: relative; z-index: 2; font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+        .choice-percent { position: relative; z-index: 2; font-weight: 700; color: var(--text-sub); display: none; }
+        .choice-box.voted .choice-percent { display: block; }
+        .choice-box.voted.selected .choice-percent { color: var(--primary); }
+
+        .btn-pick { width: 100%; justify-content: center; font-weight: 700; }
+        .btn-pick.disabled { background: #d9d9d9; border-color: #d9d9d9; }
+
+        /* 댓글 섹션 스타일 */
+        .comment-section { margin-top: 32px; }
+        .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .sort-options { display: flex; gap: 12px; font-size: 0.8rem; color: #999; }
+        .sort-item { display: flex; align-items: center; gap: 4px; cursor: pointer; transition: color 0.2s; }
+        .sort-item::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background-color: #ccc; }
+        .sort-item.active { color: var(--text-main); font-weight: 600; }
+        .sort-item.active::before { background-color: var(--primary); }
+        .comment-count { font-size: 1rem; font-weight: 700; color: var(--text-main); }
+
+        .comment-item { display: flex; gap: 12px; margin-bottom: 24px; align-items: flex-start; }
+        .comment-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #eee; flex-shrink: 0; }
+        .comment-content-wrapper { flex: 1; }
+        .comment-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .comment-author { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+        .comment-actions { display: flex; gap: 8px; }
+        .action-btn { background: none; border: none; cursor: pointer; padding: 4px; color: #666; display: flex; align-items: center; }
+        .action-btn:hover { color: var(--primary); }
+
+        .comment-text { font-size: 0.95rem; color: var(--text-main); line-height: 1.5; margin-bottom: 4px; white-space: pre-wrap; }
+        .comment-date { font-size: 0.75rem; color: var(--text-tertiary); }
+
+        /* 수정 모드 input 스타일 */
+        .edit-input { 
+            width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; 
+            font-family: inherit; font-size: 0.95rem; margin-bottom: 8px;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header>
+        <button class="icon icon-md icon-btn back-icon" id="backBtn" onclick="location.href='index.html'"></button>
+        <div class="stat-item">
+            <button class="icon icon-md icon-btn share-icon" id="shareBtn"></button>
+            <button class="icon icon-md icon-btn heart-icon" id="heartBtn"></button>
+        </div>
+    </header>
+
+    <div class="page">
+        <div class="detail-header">
+            <div class="participation-badge">
+                <span class="icon icon-xs pickUser-icon"></span>
+                <span class="top-totalVotes">400명 Pick</span>
+            </div>
+            <div class="author-info">
+                <img src="https://picsum.photos/seed/cat1/100/100" class="avatar" />
+                <div class="author-meta">
+                    <span class="author-name">에이델리</span>
+                    <span class="time-ago">12분 전</span>
+                </div>
+            </div>
+            <h2 class="detail-title">눈이 많이 안좋아진 것 같아요ㅜㅜ</h2>
+            <div class="detail-body">요즘 밤늦게까지 스마트폰을 봐서 그런지 시력이 확 떨어진 기분이에요. 다들 눈 건강 어떻게 챙기시나요? 영양제라도 먹어야 할까요?</div>
+        </div>
+
+        <div class="pick-section">
+            <div class="pick-title">
+                <span>고민 Pick!</span>
+            </div>
+            
+            <div class="choice-list">
+                <div class="choice-box" onclick="selectChoice(this)" data-percent="35">
+                    <div class="gauge"></div>
+                    <span class="choice-text">에어컨 빵빵한 여름</span>
+                    <span class="choice-percent">35%</span>
+                </div>
+                <div class="choice-box" onclick="selectChoice(this)" data-percent="65">
+                    <div class="gauge"></div>
+                    <span class="choice-text">전기장판 소유 겨울</span>
+                    <span class="choice-percent">65%</span>
+                </div>
+            </div>
+            <button class="btn-main btn-pick" id="pickBtn" onclick="handlePick()">Pick</button>
+        </div>
+        
+        <div class="comment-section">
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { renderIcons } from "./icons/renderIcons.js";
+
+    // 1. 초기 헤더 아이콘들 렌더링
+    renderIcons(); 
+
+    // 하트 애니메이션 로직
+    const heartBtn = document.getElementById("heartBtn");
+    heartBtn.addEventListener("click", () => {
+        heartBtn.classList.toggle("active");
+        heartBtn.classList.remove("heart-pop");
+        void heartBtn.offsetWidth;
+        heartBtn.classList.add("heart-pop");
+    });
+
+    // 드롭다운 및 공감 로직 등 기존 스크립트 유지
+    function toggleDropdown() { document.getElementById('dropdown').classList.toggle('active'); }
+
+    function selectChoice(el) {
+        if(document.getElementById('pickBtn').classList.contains('disabled')) return;
+        document.querySelectorAll('.choice-box').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+
+    function handlePick() {
+        const selected = document.querySelector('.choice-box.selected');
+        if(!selected) { alert('선택지를 골라주세요!'); return; }
+        const btn = document.getElementById('pickBtn');
+        btn.innerText = 'Pick 완료';
+        btn.classList.add('disabled');
+        document.querySelectorAll('.choice-box').forEach(box => {
+            box.classList.add('voted');
+            box.querySelector('.gauge').style.width = box.getAttribute('data-percent') + '%';
+        });
+    }
+
+    let comments = [
+        { id: 1, userId: "user123", userName: "User1", content: "여름엔 벌레 때문에 비추....", date: "2026.01.01 18:00" },
+        { id: 2, userId: "other456", userName: "에이델리", content: "공감합니다! 영양제 정보 공유해요.", date: "2026.01.01 19:30" }
+    ];
+    let currentSort = 'latest';
+    const CURRENT_USER_ID = "user123";
+    const commentContainer = document.querySelector('.comment-section');
+
+    // 전역 함수로 등록 (HTML onclick에서 접근 가능하도록)
+    window.setSort = (type) => {
+        currentSort = type;
+        renderComments();
+    };
+
+    window.deleteComment = (id) => {
+        if(confirm("댓글을 삭제하시겠습니까?")) {
+            comments = comments.filter(c => c.id !== id);
+            renderComments();
+        }
+    };
+
+    window.showEditForm = (id) => {
+        const comment = comments.find(c => c.id === id);
+        const bodyContainer = document.querySelector(`#comment-${id} .comment-body`);
+        bodyContainer.innerHTML = `
+            <textarea class="edit-input" id="edit-text-${id}">${comment.content}</textarea>
+            <div style="display:flex; gap:8px; justify-content: flex-end;">
+                <button class="btn-sub" style="padding:4px 12px; font-size:0.8rem;" onclick="renderComments()">취소</button>
+                <button class="btn-main" style="padding:4px 12px; font-size:0.8rem;" onclick="updateComment(${id})">완료</button>
+            </div>
+        `;
+    };
+
+    window.updateComment = (id) => {
+        const newContent = document.getElementById(`edit-text-${id}`).value;
+        if(!newContent.trim()) return alert("내용을 입력해주세요.");
+        const commentIndex = comments.findIndex(c => c.id === id);
+        comments[commentIndex].content = newContent;
+        if(!comments[commentIndex].date.includes("(수정됨)")) {
+            comments[commentIndex].date += " (수정됨)";
+        }
+        renderComments();
+    };
+
+    function renderComments() {
+        const sortedComments = [...comments].sort((a, b) => {
+            return currentSort === 'latest' 
+                ? new Date(b.date.replace(' (수정됨)', '')) - new Date(a.date.replace(' (수정됨)', ''))
+                : new Date(a.date.replace(' (수정됨)', '')) - new Date(b.date.replace(' (수정됨)', ''));
+        });
+
+        commentContainer.innerHTML = `
+            <div class="comment-header">
+                <div class="comment-count">댓글 ${comments.length}개</div>
+                <div class="sort-options">
+                    <span class="sort-item ${currentSort === 'oldest' ? 'active' : ''}" onclick="setSort('oldest')">등록순</span>
+                    <span class="sort-item ${currentSort === 'latest' ? 'active' : ''}" onclick="setSort('latest')">최신순</span>
+                </div>
+            </div>
+            <div class="comment-list">
+                ${sortedComments.map(comment => `
+                    <div class="comment-item" id="comment-${comment.id}">
+                        <div class="comment-avatar"></div>
+                        <div class="comment-content-wrapper">
+                            <div class="comment-top">
+                                <span class="comment-author">${comment.userName}</span>
+                                ${comment.userId === CURRENT_USER_ID ? `
+                                    <div class="comment-actions">
+                                        <button class="icon icon-sm icon-btn edit-icon" onclick="showEditForm(${comment.id})"></button>
+                                        <button class="icon icon-sm icon-btn trash-icon" onclick="deleteComment(${comment.id})"></button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="comment-body">
+                                <p class="comment-text">${comment.content}</p>
+                            </div>
+                            <div class="comment-date">${comment.date}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        renderIcons(commentContainer);
+    }
+    window.renderComments = renderComments;
+    // 초기 실행
+    renderComments();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickside - 고민 등록</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .page-title { margin: 8px 0; font-size: 1.6rem; font-weight: 800; }
+        .page-desc { color: var(--text-sub); font-size: 1rem; margin: 4px 0 24px; line-height: 1.5; }
+        .page-desc span { display: block; }
+        .input-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+        .input-field {
+            width: 100%; padding: 14px 20px; border-radius: 5px;
+            border: 1px solid var(--border); background: var(--bg);
+            font-size: 1rem; font-weight: 500; outline: none; transition: all 0.2s;
+            color: var(--text-main);
+        }
+        .input-field::placeholder { color: var(--text-tertiary); }
+        .input-field:focus {
+            background: var(--white); border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+        .choice-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 12px; }
+        .choice-wrapper .input-field {
+            padding-right: 52px;
+        }
+        .delete-btn {
+            position: absolute; right: 16px; background: none; border: none; cursor: pointer;
+            display: flex;  align-items: center; justify-content: center;
+            padding: 4px;
+        }
+        .delete-btn:hover {color: var(--accent);}
+        .delete-btn img { width: 12px; height: 12px; } 
+        .add-choice-btn {
+            width: 100%; padding: 14px; border: 1.5px dashed var(--text-sub); border-radius: 5px; 
+            background: none; color: var(--text-main); font-weight: 700; font-size: 0.95rem; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            gap: 8px; margin-bottom: 24px;
+        }
+        .add-choice-btn img { width: 16px; height: 16px; }
+        .btn-submit { margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header>
+        <a href="index.html" class="logo">Pick<span>side.</span></a>
+        <div class="profile-container">
+            <div class="profile-trigger" onclick="toggleDropdown()">
+                <img src="https://ui-avatars.com/api/?name=User&background=02C5A1&color=fff" alt="Profile">
+            </div>
+            <div id="dropdown" class="dropdown">
+                <div class="dropdown-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    프로필 수정
+                </div>
+                <div class="dropdown-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    비밀번호 변경
+                </div>
+                <div class="dropdown-item" style="color: #ef4444;" onclick="alert('로그아웃 되었습니다.')">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    로그아웃
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="page">
+        <h2 class="page-title">어떤 것이 <span style="color:var(--primary)">고민</span>인가요?</h2>
+        <p class="page-desc">
+            모든 Pick은 익명으로 이루어집니다.
+        </p>
+
+        <div class="input-container">
+            <input type="text" class="input-field" placeholder="제목을 입력해주세요.">
+        </div>
+
+        <div id="choice-list">
+            <div class="choice-wrapper">
+                <input type="text" class="input-field" placeholder="선택지 입력">
+                <button class="delete-btn" onclick="handleChoiceDelete(this)">
+                    <img src="assets/icons/delete.svg" alt="삭제">
+                </button>
+            </div>
+            <div class="choice-wrapper">
+                <input type="text" class="input-field" placeholder="선택지 입력">
+                <button class="delete-btn" onclick="handleChoiceDelete(this)">
+                    <img src="assets/icons/delete.svg" alt="삭제">
+                </button>
+            </div>
+        </div>
+        <button class="add-choice-btn" onclick="addChoice()">
+            <img src="assets/icons/add.svg" alt="추가"> 선택지 추가
+        </button>
+
+        <button class="btn-main btn-submit" onclick="location.href='index.html'">고민 게시하기</button>
+    </div>
+</div>
+
+<script>
+    const choiceList = document.getElementById('choice-list');
+
+    // 선택지 추가 로직
+    function addChoice() {
+        const currentChoices = document.querySelectorAll('.choice-wrapper').length;
+        if (currentChoices >= 10) {
+            alert('선택지는 최대 10개까지 추가할 수 있습니다.');
+            return;
+        }
+
+        const newChoice = document.createElement('div');
+        newChoice.className = 'choice-wrapper';
+        newChoice.innerHTML = `
+            <input type="text" class="input-field" placeholder="선택지 입력">
+            <button class="delete-btn" onclick="handleChoiceDelete(this)">
+                <img src="assets/icons/delete.svg" alt="삭제">
+            </button>
+        `;
+        choiceList.appendChild(newChoice);
+    }
+
+    // 선택지 삭제 로직
+    function handleChoiceDelete(btn) {
+        const currentChoices = document.querySelectorAll('.choice-wrapper').length;
+        if (currentChoices <= 2) {
+            alert('선택지는 최소 2개 이상이어야 합니다.');
+        } else {
+            btn.closest('.choice-wrapper').remove();
+        }
+    }
+    
+    function toggleDropdown() {
+        document.getElementById('dropdown').classList.toggle('active');
+    }
+
+    window.onclick = function(event) {
+        if (!event.target.closest('.profile-container')) {
+            document.getElementById('dropdown').classList.remove('active');
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickside - FEED</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .hero {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 28px 32px; margin: 24px 20px;
+            background: linear-gradient(135deg, #f8fafc, #eef2ff); border-radius: 10px;
+        }
+        .hero-text { max-width: 420px;}
+        .hero-heading { font-size: 1.2rem; font-weight: 800; margin: 6px 0 8px; color: var(--text-main);}
+        .hero-desc { font-size: 0.8rem; font-weight: 500; color: var(--text-sub); line-height: 1.4; margin-bottom: 12px; }
+        .hero-button { font-size: 0.9rem; padding: 10px 18px; }
+        .hero-image img { 
+            width: 100%; max-width: 120px; height: auto; display: block; margin-left: auto;
+            animation: float 3s ease-in-out infinite; 
+        }
+        @media (max-width: 480px) {
+            .hero { padding: 30px; }
+            .hero-image img { max-width: 100px; }
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* 탭 영역 */
+        .feed-tabs { display: flex; background-color: var(--white); border-bottom: 1px solid var(--border-sub); }
+        .tab-item {
+            flex: 1; text-align: center; padding: 14px 0; font-size: 1rem; font-weight: 700; color: var(--text-dim);
+            cursor: pointer; transition: all 0.2s; position: relative;
+        }
+        .tab-item.active { color: var(--text-main); }
+        .tab-item.active::after {
+            content: ""; position: absolute; bottom: 0; left: 50%; width: 80%; height: 2px;
+            background-color: var(--primary); transform: translateX(-50%);
+        }
+
+        /* 메인 컨텐츠 영역 */
+        .content-area { flex: 1; padding-bottom: 20px; }
+        .participation-badge {
+            display: inline-flex; align-items: center; gap: 2px; background-color: (--white); color: var(--primary);
+            font-weight: 500; font-size: 0.7rem; padding: 0 10px; border-radius: 3px; margin-bottom: 12px; border: 1px solid var(--primary);
+        }
+        .poll-card { background-color: var(--white); padding: 16px 0 12px 0; border-bottom: 8px solid #f3f4f6; cursor: pointer; }
+        .poll-card:active { background-color: #fafafa; }
+        .poll-card:hover { background-color: #fafafa; }
+        .poll-card-top { padding: 0 20px; }
+        .top-totalVotes { padding: 4px 0;}
+        .top-title {
+            font-size: 1.05rem; font-weight: 600; color: var(--text-main); line-height: 1.5; margin-bottom: 12px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .poll-card hr { border: none; border-top: 1px solid #dcdcdc; margin-bottom: 12px; }
+        .poll-footer { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; color: var(--text-tertiary); font-size: 0.8rem; }
+        .footer-left { display: flex; align-items: center; gap: 4px; }
+        .footer-right { display: flex; align-items: center; gap: 8px; }
+        .stat-item { display: flex; align-items: center; gap: 4px; }
+        .meta-text { font-size: 0.8rem; }
+
+        /* 페이지네이션 영역 */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 4px; padding: 32px 0; background-color: var(--white); }
+        .page-btn {
+            display: flex; justify-content: center; align-items: center; width: 32px; height: 32px;
+            border-radius: 8px; background-color: var(--white); border: none; color: var(--text-sub);
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+        }
+        .page-btn:not(.active):not(:disabled):hover { border: 1px solid var(--primary); color: var(--primary); }
+        .page-btn.active { background-color: var(--primary); border-color: var(--primary); color: var(--white); }
+        .page-btn:disabled { cursor: default; opacity: 50%; } 
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header>
+        <a href="index.html" class="logo">Pick<span>side.</span></a>
+        <div class="profile-container">
+            <div class="profile-trigger" onclick="toggleDropdown()">
+                <img src="https://ui-avatars.com/api/?name=User&background=02C5A1&color=fff" alt="Profile">
+            </div>
+            <div id="dropdown" class="dropdown">
+                <div class="dropdown-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    프로필 수정
+                </div>
+                <div class="dropdown-item">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    비밀번호 변경
+                </div>
+                <div class="dropdown-item" style="color: #ef4444;" onclick="alert('로그아웃 되었습니다.')">
+                    <svg viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    로그아웃
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page">
+        <section class="section-hero section-spacing">
+            <div class="inner">
+                <div class="hero">
+                    <div class="hero-text">
+                        <h2 class="hero-heading">
+                        지금 고민 중인 선택들
+                        </h2>
+                        <div class="hero-desc">
+                        혼자 결정하기 어려운 순간,<br>
+                        익명 'Pick'으로 답을 받아보세요.
+                        </div>
+                        <button class="btn-main hero-button" onclick="location.href='create.html'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            고민 작성하기
+                        </button>
+                    </div>
+                    <div class="hero-image">
+                        <img src="assets/images/ghost.png" alt="고민하는 유령">
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <nav class="feed-tabs">
+            <div class="tab-item active" onclick="changeTab(this, 'all')">전체 피드</div>
+            <div class="tab-item" onclick="changeTab(this, 'my')">내 피드</div>
+        </nav>
+        <main id="pollList" class="content-area"></main>
+        <div id="pagination" class="pagination"></div>
+    </main>
+</div>
+
+
+<script type="module">
+    import { renderIcons } from "./icons/renderIcons.js";
+    // --- Mock Data ---
+    let polls = [
+        {
+            id: '1',
+            author: '에이델2',
+            authorLevel: 3,
+            avatar: 'https://picsum.photos/seed/cat1/100/100',
+            timeAgo: '12분 전',
+            title: '눈이 많이 안좋아진거 같아요 ㅠㅠ',
+            content: '요즘 밤늦게까지 스마트폰을 봐서 그런지 시력이 확 떨어진 기분이에요. 다들 눈 건강 어떻게 챙기시나요? 영양제라도 먹어야 할까요?',
+            options: [
+                { id: 'opt1', text: '루테인 등 영양제 복용', votes: 45 },
+                { id: 'opt2', text: '스마트폰 사용 줄이기', votes: 55 }
+            ],
+            totalVotes: 100,
+            likes: 120,
+            commentCount: 100,
+            views: 230,
+            votedOptionId: null,
+            comments: [
+                { id: 'c1', author: '건강왕', authorLevel: 5, content: '저도 영양제 챙겨먹으니까 좀 낫더라구요!', createdAt: '5분 전', avatar: 'https://picsum.photos/seed/user1/100/100' }
+            ]
+        },
+        {
+            id: '2',
+            author: '나는야공주임',
+            authorLevel: 1,
+            avatar: 'https://picsum.photos/seed/cat2/100/100',
+            timeAgo: '16분 전',
+            title: '여름 vs 겨울 어떤 계절이 더 좋은가요?',
+            content: '입술필러 맞으려고 여러군데 알아보는 중인데 입꼬리는 안할거고 입술 가로 넓히고 아랫입술 조금 크게 만들고 싶어용... 추천해주실만한 곳 있나요?',
+            options: [
+                { id: 'opt3', text: '강남 유명 병원', votes: 120 },
+                { id: 'opt4', text: '동네 입소문 병원', votes: 80 }
+            ],
+            totalVotes: 200,
+            likes: 5,
+            commentCount: 0,
+            views: 16,
+            votedOptionId: null,
+            comments: []
+        },
+        {
+            id: '3',
+            author: '민초사랑공주님사랑해',
+            authorLevel: 10,
+            avatar: 'https://picsum.photos/seed/cat3/100/100',
+            timeAgo: '2026.02.02',
+            title: '평생 하나만 먹는다면?',
+            content: '인생 최대의 난제입니다. 민초 vs 반민초! 여러분의 선택은?',
+            options: [
+                { id: 'opt5', text: '상쾌한 민트초코', votes: 300 },
+                { id: 'opt6', text: '절대 용납불가 반민초', votes: 280 }
+            ],
+            totalVotes: 500,
+            likes: 88,
+            commentCount: 15,
+            views: 12,
+            votedOptionId: null,
+            comments: [
+                { id: 'c2', author: '민트초코', authorLevel: 2, content: '민초는 사랑입니다', createdAt: '30분 전', avatar: 'https://picsum.photos/seed/user2/100/100' },
+                { id: 'c3', author: '치약혐오', authorLevel: 1, content: '그걸 왜먹어요..', createdAt: '10분 전', avatar: 'https://picsum.photos/seed/user3/100/100' }
+            ]
+        }
+    ];
+    function changeTab(element, type) {
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        element.classList.add('active');
+        
+    }
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    function renderPolls() {
+        const pollList = document.getElementById('pollList');
+        pollList.innerHTML = ''; 
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedItems = polls.slice(startIndex, endIndex);
+
+        paginatedItems.forEach(poll => {
+            const card = document.createElement('article');
+            card.className = 'poll-card';
+            card.onclick = () => location.href = `detail.html?id=${poll.id}`;
+            
+            card.innerHTML = `
+                <div class="poll-card-top">
+                    <div class="participation-badge">
+                        <span class="icon icon-xs pickUser-icon"></span>
+                        <span class="top-totalVotes">${poll.totalVotes.toLocaleString()}명 Pick</span>
+                    </div>
+                    <div class="top-title">${poll.title}</div>
+                </div>
+                <hr />
+                <div class="poll-footer">
+                    <div class="footer-left">
+                        <span>${poll.timeAgo}</span>
+                        <span>· ${poll.author}</span>
+                    </div>
+                    <div class="footer-right">
+                        <div class="stat-item">
+                            <span class="icon icon-xs view-icon"></span>
+                            <span class="meta-text">${poll.views}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="icon icon-xs heart-icon"></span>
+                            <span class="meta-text">${poll.likes}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="icon icon-xs comment-icon"></span>
+                            <span class="meta-text">${poll.commentCount}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            renderIcons(card);
+            pollList.appendChild(card);
+        });
+
+
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const paginationContainer = document.getElementById('pagination');
+        if (!paginationContainer) return; 
+        
+        paginationContainer.innerHTML = '';
+
+        const totalPages = Math.ceil(polls.length / itemsPerPage) || 1;
+
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'page-btn';
+        prevBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        `;
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => { 
+            if(currentPage > 1) {
+                currentPage--; 
+                renderPolls(); 
+                window.scrollTo(0, 0); 
+            }
+        };
+        paginationContainer.appendChild(prevBtn);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+            pageBtn.innerText = i;
+            pageBtn.onclick = () => { 
+                currentPage = i; 
+                renderPolls(); 
+                window.scrollTo(0, 0); 
+            };
+            paginationContainer.appendChild(pageBtn);
+        }
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'page-btn';
+        nextBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        `;
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => { 
+            if(currentPage < totalPages) {
+                currentPage++; 
+                renderPolls(); 
+                window.scrollTo(0, 0); 
+            }
+        };
+        paginationContainer.appendChild(nextBtn);
+    }
+    window.onload = renderPolls;
+    function toggleDropdown() {
+        document.getElementById('dropdown').classList.toggle('active');
+    }
+    window.onclick = function(event) {
+        if (!event.target.closest('.profile-container')) {
+            document.getElementById('dropdown').classList.remove('active');
+        }
+    }
+</script>
+
+</body>
+</html>
